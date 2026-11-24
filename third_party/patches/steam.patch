@@ -1,0 +1,47 @@
+Local patch for STEAMtool at zeyuxie29/AudioTime@9ac2023 (not from upstream).
+Applied by scripts/download_data.sh. It loads best.pth on PyTorch >= 2.6,
+handles empty or very short generated clips, and clips predicted event
+boundaries to the clip duration.
+
+--- a/STEAMtool/steam/grounding_tool/grounding_pipeline.py	2026-11-21 08:24:45.892211750 +0800
++++ b/STEAMtool/steam/grounding_tool/grounding_pipeline.py	2026-11-21 08:24:45.897211655 +0800
+@@ -19,7 +19,7 @@
+     model = train_util.init_obj_from_str(
+         config["model"],
+     )
+-    ckpt = torch.load(exp_dir / "best.pth", "cpu")
++    ckpt = torch.load(exp_dir / "best.pth", map_location="cpu", weights_only=False)
+     train_util.load_pretrained_model(model, ckpt, output_fn=print_pass)
+     model = model.to(device)
+     
+@@ -50,6 +50,13 @@
+     else:
+         waveform, _ = librosa.core.load(audio_file, sr=sample_rate)
+     duration = waveform.shape[0] / sample_rate
++    if duration == 0:
++        return []
++    encoder = model.audio_encoder
++    min_samples = max(encoder.win_length // 2 + 1,
++                      encoder.hop_length * encoder.downsample_ratio)
++    if len(waveform) < min_samples:
++        waveform = librosa.util.fix_length(waveform, size=min_samples)
+     phrase = re.sub(r'[^\w\s]', '', phrase.lower())
+     text = [model.vocabulary(token) for token in phrase.split()]
+ 
+@@ -78,6 +85,11 @@
+     for row in change_indices:
+         onset = round(row[0] * time_resolution * ratio, 2)
+         offset = round(row[1] * time_resolution * ratio, 2)
++        if onset >= duration:
++            continue
++        offset = min(offset, duration)
++        if offset <= onset:
++            continue
+         if (onset - last_offset) < continue_window:
+             results[-1][-1] = offset
+         else:
+@@ -129,4 +141,3 @@
+     
+ 
+    
+-

@@ -1,0 +1,6 @@
+ssr_eval==0.0.7
+laion-clap==1.1.7
+torchtune==0.6.1
+xcodec2==0.1.5
+audioldm_eval @ git+https://github.com/haoheliu/audioldm_eval.git@8dc07ee7c42f9dc6e295460a1034175a0d49b436
+flash_attn @ https://github.com/mjun0812/flash-attention-prebuild-wheels/releases/download/v0.9.4/flash_attn-2.8.3%2Bcu130torch2.11-cp313-cp313-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl

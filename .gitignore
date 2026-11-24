@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.envs/
+.cache/
+.verify/
+checkpoints/
+data/
+runs/
+config.local.sh
+third_party/unison/models/mmaudio/data/
